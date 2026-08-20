@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Professor CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #262019;
+    --paper: #F3EFE3;
+    --paper-raised: #FBF9F2;
+    --accent: #56705B;
+    --accent-soft: #DCE3D3;
+    --line: #D9D2BE;
+    --muted: #8A8370;
+    --durable-mark: #7A6A4F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+  }
+
+  header h1 {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  header .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .search-wrap {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #search {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 9px 14px;
+    width: 280px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  #search:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    min-height: calc(100vh - 77px);
+  }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  main {
+    padding: 32px;
+    border-right: 1px solid var(--line);
+  }
+
+  .person-header {
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .person-header .name {
+    font-family: 'Source Serif 4', serif;
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+
+  .person-header .addrs {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .section-label.previous {
+    color: var(--durable-mark);
+  }
+
+  .notes-section { margin-bottom: 36px; }
+
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+
+  .card.previous {
+    border-left-color: var(--durable-mark);
+    opacity: 0.92;
+  }
+
+  .card .content {
+    font-size: 14.5px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 0.01em;
+  }
+
+  .tag.date {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .tag.ref {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s;
+  }
+
+  .tag.ref:hover, .tag.ref.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .empty-state {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+    padding: 8px 0;
+  }
+
+  aside {
+    padding: 32px 28px;
+    background: var(--paper-raised);
+  }
+
+  aside .section-label { color: var(--muted); }
+
+  .email-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .email-meta .subject {
+    font-family: 'Source Serif 4', serif;
+    font-size: 17px;
+    color: var(--ink);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .email-body {
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+  }
+
+  .placeholder {
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding-top: 8px;
+  }
+
+  #merges-panel:empty { display: none; }
+
+  .merges-panel {
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--line);
+    background: var(--accent-soft);
+  }
+
+  .merges-panel .merges-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .merge-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+
+  .merge-item .merge-text {
+    flex: 1;
+    font-size: 13.5px;
+  }
+
+  .merge-item .merge-evidence {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .merge-item button {
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    cursor: pointer;
+  }
+
+  .merge-item button.confirm {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .merge-item button.confirm:hover { background: var(--accent-soft); }
+  .merge-item button.reject:hover { background: #EFE5E0; }
+
+  .landing {
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding-top: 40px;
+    line-height: 1.6;
+  }
+
+  .match-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .match-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    padding: 12px 16px;
+    transition: border-left-color 0.12s;
+  }
+
+  .match-item:hover {
+    border-left-color: var(--durable-mark);
+  }
+
+  .match-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .match-info {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .match-name {
+    font-family: 'Source Serif 4', serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .match-addrs {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .merge-controls {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  #merge-selected-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 2px;
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  #merge-selected-btn:hover {
+    background: var(--accent);
+    color: var(--paper-raised);
+  }
+
+  #settings-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  #settings-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .settings-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(38, 32, 25, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .settings-modal {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 24px 26px;
+    width: 380px;
+    max-width: calc(100vw - 40px);
+  }
+
+  .settings-modal h2 {
+    font-family: 'Source Serif 4', serif;
+    font-size: 18px;
+    margin: 0 0 4px;
+  }
+
+  .settings-modal .hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    margin: 0 0 16px;
+    line-height: 1.5;
+  }
+
+  .email-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .email-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 5px 6px 5px 10px;
+    border-radius: 2px;
+  }
+
+  .email-chip button {
+    border: none;
+    background: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0 2px;
+  }
+
+  .settings-modal .add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  #new-email-input {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  .settings-modal .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .settings-modal .actions button {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  #settings-cancel {
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    color: var(--muted);
+  }
+
+  #settings-save {
+    border: 1px solid var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  #settings-save:hover {
+    background: var(--accent);
+    color: var(--paper-raised);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="eyebrow">Professor CRM</div>
+    <h1>Contact Notes</h1>
+  </div>
+  <div class="search-wrap">
+    <input id="search" type="text" placeholder="Search by name or email address..." />
+    <button id="settings-btn" title="Your email address(es)">Settings</button>
+  </div>
+</header>
+
+<div id="merges-panel"></div>
+<div id="settings-panel"></div>
+
+<div class="layout">
+  <main id="main">
+    <div class="landing">Enter an email address above to view notes.</div>
+  </main>
+
+  <aside id="aside">
+    <div class="section-label">Email</div>
+    <div class="placeholder">Click a reference tag to view the full email here.</div>
+  </aside>
+</div>
+
+<script>
+const searchInput = document.getElementById('search');
+const mainEl = document.getElementById('main');
+const asideEl = document.getElementById('aside');
+const mergesPanelEl = document.getElementById('merges-panel');
+const settingsPanelEl = document.getElementById('settings-panel');
+const settingsBtn = document.getElementById('settings-btn');
+
+let pendingEmails = [];
+
+async function openSettings() {
+  let emails = [];
+  try {
+    const res = await fetch('/api/config');
+    const data = await res.json();
+    emails = data.user_emails || [];
+  } catch (err) {
+    // fall through with an empty list -- the modal still lets you add addresses
+  }
+  pendingEmails = [...emails];
+  renderSettings();
+}
+
+function renderSettings() {
+  settingsPanelEl.innerHTML = `
+    <div class="settings-backdrop" id="settings-backdrop">
+      <div class="settings-modal">
+        <h2>Your email address(es)</h2>
+        <p class="hint">Mail sent or received by these addresses is treated as yours, not as a contact.</p>
+        <div class="email-chip-list" id="email-chip-list">
+          ${pendingEmails.map((addr, i) => `
+            <span class="email-chip">
+              ${escapeHtml(addr)}
+              <button type="button" data-idx="${i}" title="Remove">&times;</button>
+            </span>
+          `).join('') || '<span class="hint">No addresses set yet.</span>'}
+        </div>
+        <div class="add-row">
+          <input id="new-email-input" type="text" placeholder="add an address..." />
+        </div>
+        <div class="actions">
+          <button id="settings-cancel" type="button">Cancel</button>
+          <button id="settings-save" type="button">Save</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('settings-backdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'settings-backdrop') closeSettings();
+  });
+
+  document.querySelectorAll('.email-chip button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingEmails.splice(Number(btn.dataset.idx), 1);
+      renderSettings();
+    });
+  });
+
+  const input = document.getElementById('new-email-input');
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addPendingEmail(input.value);
+    }
+  });
+
+  document.getElementById('settings-cancel').addEventListener('click', closeSettings);
+  document.getElementById('settings-save').addEventListener('click', saveSettings);
+}
+
+function addPendingEmail(raw) {
+  const addr = raw.trim().toLowerCase();
+  if (addr && !pendingEmails.includes(addr)) {
+    pendingEmails.push(addr);
+  }
+  renderSettings();
+}
+
+function closeSettings() {
+  settingsPanelEl.innerHTML = '';
+}
+
+async function saveSettings() {
+  try {
+    await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_emails: pendingEmails }),
+    });
+  } catch (err) {
+    // best-effort -- the modal just closes either way
+  }
+  closeSettings();
+}
+
+settingsBtn.addEventListener('click', openSettings);
+
+async function loadMerges() {
+  try {
+    const res = await fetch('/api/merges');
+    const data = await res.json();
+    renderMerges(data.pending_merges || []);
+  } catch (err) {
+    // silently skip -- not critical to the main search flow
+  }
+}
+
+function renderMerges(merges) {
+  if (!merges.length) {
+    mergesPanelEl.innerHTML = '';
+    return;
+  }
+  mergesPanelEl.innerHTML = `
+    <div class="merges-panel">
+      <div class="merges-label">Possible same person &mdash; review</div>
+      ${merges.map(m => `
+        <div class="merge-item" data-merge-id="${escapeHtml(m.merge_id)}">
+          <div class="merge-text">
+            <strong>${escapeHtml(m.new_person_id)}</strong> may be the same person as
+            <strong>${escapeHtml(m.candidate_display_name || m.candidate_person_id)}</strong>
+            <span class="merge-evidence">${escapeHtml(m.evidence || '')}</span>
+          </div>
+          <button class="confirm">Merge</button>
+          <button class="reject">Not the same</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  mergesPanelEl.querySelectorAll('.merge-item').forEach(item => {
+    const mergeId = item.dataset.mergeId;
+    item.querySelector('.confirm').addEventListener('click', () => resolveMerge(mergeId, true));
+    item.querySelector('.reject').addEventListener('click', () => resolveMerge(mergeId, false));
+  });
+}
+
+async function resolveMerge(mergeId, confirmed) {
+  try {
+    await fetch(`/api/merges/${encodeURIComponent(mergeId)}/resolve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmed }),
+    });
+  } catch (err) {
+    // fall through to reload regardless -- worst case the item just stays visible
+  }
+  loadMerges();
+}
+
+loadMerges();
+
+let debounceTimer;
+searchInput.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  const q = searchInput.value.trim();
+  if (!q) {
+    mainEl.innerHTML = '<div class="landing">Enter an email address above to view notes.</div>';
+    return;
+  }
+  debounceTimer = setTimeout(() => lookupPerson(q), 350);
+});
+
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    clearTimeout(debounceTimer);
+    lookupPerson(searchInput.value.trim());
+  }
+});
+
+async function lookupPerson(q) {
+  if (!q) return;
+  mainEl.innerHTML = '<div class="landing">Searching...</div>';
+  try {
+    const res = await fetch(`/api/people?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    if (!data.found) {
+      if (data.multiple_matches) {
+        renderMatchList(data.multiple_matches, q);
+      } else {
+        mainEl.innerHTML = `<div class="landing">No record found for "${escapeHtml(q)}".</div>`;
+      }
+      return;
+    }
+    renderPerson(data);
+  } catch (err) {
+    mainEl.innerHTML = '<div class="landing">Could not reach the server. Is it running?</div>';
+  }
+}
+
+function renderMatchList(matches, q) {
+  mainEl.innerHTML = `
+    <div class="landing" style="padding-top:0;">
+      ${matches.length} people match "${escapeHtml(q)}" &mdash; these may be the same
+      person under different addresses. Click a name to view it, or check
+      multiple to merge them.
+    </div>
+    <div class="match-list">
+      ${matches.map(m => `
+        <div class="match-item">
+          <input type="checkbox" class="match-checkbox" data-person-id="${escapeHtml(m.person_id)}" />
+          <div class="match-info" data-person-id="${escapeHtml(m.person_id)}">
+            <div class="match-name">${escapeHtml(m.display_name || m.person_id)}</div>
+            <div class="match-addrs">${escapeHtml(m.emails.join(', '))}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div id="merge-controls" class="merge-controls"></div>
+  `;
+
+  const checkedOrder = [];
+
+  document.querySelectorAll('.match-info').forEach(info => {
+    info.addEventListener('click', () => loadPersonById(info.dataset.personId));
+  });
+
+  document.querySelectorAll('.match-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      const pid = checkbox.dataset.personId;
+      if (checkbox.checked) {
+        if (!checkedOrder.includes(pid)) checkedOrder.push(pid);
+      } else {
+        const idx = checkedOrder.indexOf(pid);
+        if (idx !== -1) checkedOrder.splice(idx, 1);
+      }
+      updateMergeControls(checkedOrder, matches);
+    });
+  });
+}
+
+function updateMergeControls(checkedOrder, matches) {
+  const controls = document.getElementById('merge-controls');
+  if (checkedOrder.length < 2) {
+    controls.innerHTML = '';
+    return;
+  }
+  const primaryMatch = matches.find(m => m.person_id === checkedOrder[0]);
+  const primaryName = primaryMatch ? (primaryMatch.display_name || primaryMatch.person_id) : checkedOrder[0];
+  controls.innerHTML = `
+    <span>Will merge ${checkedOrder.length - 1} record(s) into: <strong>${escapeHtml(primaryName)}</strong></span>
+    <button id="merge-selected-btn">Merge Selected</button>
+  `;
+  document.getElementById('merge-selected-btn').addEventListener('click', () => {
+    const [primary, ...secondaries] = checkedOrder;
+    performManualMerge(primary, secondaries);
+  });
+}
+
+async function performManualMerge(primary, secondaries) {
+  mainEl.innerHTML = '<div class="landing">Merging...</div>';
+  try {
+    await fetch('/api/merges/manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ primary_person_id: primary, secondary_person_ids: secondaries }),
+    });
+    loadPersonById(primary);
+  } catch (err) {
+    mainEl.innerHTML = '<div class="landing">Merge failed. Is the server running?</div>';
+  }
+}
+
+async function loadPersonById(personId) {
+  mainEl.innerHTML = '<div class="landing">Loading...</div>';
+  try {
+    const res = await fetch(`/api/people/${encodeURIComponent(personId)}`);
+    if (!res.ok) {
+      mainEl.innerHTML = '<div class="landing">Could not load that person.</div>';
+      return;
+    }
+    const data = await res.json();
+    renderPerson({ found: true, ...data });
+  } catch (err) {
+    mainEl.innerHTML = '<div class="landing">Could not reach the server. Is it running?</div>';
+  }
+}
+
+function renderPerson(data) {
+  const addrs = data.emails.join(', ');
+  mainEl.innerHTML = `
+    <div class="person-header">
+      <div class="name">${escapeHtml(data.display_name || data.person_id)}</div>
+      <div class="addrs">${escapeHtml(addrs)}</div>
+    </div>
+    <div class="notes-section">
+      <div class="section-label">Notes</div>
+      ${renderBullets(data.notes, false)}
+    </div>
+    <div class="notes-section">
+      <div class="section-label previous">Previous Notes</div>
+      ${renderBullets(data.previous_notes, true)}
+    </div>
+  `;
+  attachRefHandlers();
+}
+
+function renderBullets(bullets, isPrevious) {
+  if (!bullets || bullets.length === 0) {
+    return '<div class="empty-state">Nothing here yet.</div>';
+  }
+  return bullets.map(b => `
+    <div class="card ${isPrevious ? 'previous' : ''}">
+      <div class="content">${escapeHtml(b.content)}</div>
+      <div class="tags">
+        <span class="tag date">${escapeHtml(b.last_updated)}</span>
+        ${b.ref.map(id => `<span class="tag ref" data-email-id="${escapeHtml(id)}">${escapeHtml(id)}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function attachRefHandlers() {
+  document.querySelectorAll('.tag.ref').forEach(tag => {
+    tag.addEventListener('click', () => {
+      document.querySelectorAll('.tag.ref').forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      loadEmail(tag.dataset.emailId);
+    });
+  });
+}
+
+async function loadEmail(emailId) {
+  asideEl.innerHTML = '<div class="section-label">Email</div><div class="placeholder">Loading...</div>';
+  try {
+    const res = await fetch(`/api/emails/${encodeURIComponent(emailId)}`);
+    if (!res.ok) {
+      asideEl.innerHTML = '<div class="section-label">Email</div><div class="placeholder">Email not found.</div>';
+      return;
+    }
+    const email = await res.json();
+    asideEl.innerHTML = `
+      <div class="section-label">Email &mdash; ${escapeHtml(emailId)}</div>
+      <div class="email-meta">
+        <div class="subject">${escapeHtml(email.subject || '(no subject)')}</div>
+        From: ${escapeHtml(email.from || '')}<br>
+        To: ${escapeHtml((email.to || []).join(', '))}<br>
+        ${email.cc && email.cc.length ? `Cc: ${escapeHtml(email.cc.join(', '))}<br>` : ''}
+        Date: ${escapeHtml(email.timestamp || '')}
+      </div>
+      <div class="email-body">${escapeHtml(email.body || '')}</div>
+    `;
+  } catch (err) {
+    asideEl.innerHTML = '<div class="section-label">Email</div><div class="placeholder">Could not load email.</div>';
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>

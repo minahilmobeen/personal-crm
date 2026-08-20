@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# secrets -- never commit these
+.env
+credentials.json
+token.json
+
+# runtime data -- regenerated locally by email_sync.py / run.py
+data/emails.json
+data/memory.json
+data/config.json
